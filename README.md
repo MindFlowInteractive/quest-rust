@@ -1,6 +1,5 @@
 # Quest Rust
-
-A Rust-based project for building and experimenting with [your purpose — e.g., smart contracts, backend logic, or CLI tools].
+A Rust-based project for building and experimenting that is brain-challenging, single-player puzzle game that tests your logical reasoning and problem-solving skills. Explore a series of cause-and-effect puzzles, unlock stella-based rewards, and prove your mastery over logic and science. Play, solve, and earn on-chain achievements as NFTs, and dive into the world of logic like never before
 
 ---
 
