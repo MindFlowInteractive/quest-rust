@@ -1,6 +1,4 @@
-mod player;
-
-use player::Player;
+mod leaderboard;
 
 fn main() {
     let mut player = Player::new("player-1");
