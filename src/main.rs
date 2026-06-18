@@ -1,6 +1,6 @@
-mod leaderboard;
-
 fn main() {
+    use smart_contract_game::player::Player;
+
     let mut player = Player::new("player-1");
     player.add_score(100);
     player.advance_puzzle();
