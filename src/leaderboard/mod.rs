@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -62,12 +63,12 @@ impl Leaderboard {
     }
 
     // Helpers for serialization
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
+    pub fn to_json(&self) -> Result<String, AppError> {
+        Ok(serde_json::to_string(&self)?)
     }
 
-    pub fn from_json(s: &str) -> Self {
-        serde_json::from_str(s).unwrap()
+    pub fn from_json(s: &str) -> Result<Self, AppError> {
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -135,8 +136,8 @@ mod tests {
             score: 100,
             timestamp: 10,
         });
-        let json = lb.to_json();
-        let restored = Leaderboard::from_json(&json);
+        let json = lb.to_json().expect("serialize");
+        let restored = Leaderboard::from_json(&json).expect("deserialize");
         assert_eq!(lb.top(), restored.top());
     }
 }
