@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn test_emit_and_subscribe() {
         let mut system = EventSystem::new();
-        
+
         let received = Arc::new(Mutex::new(Vec::new()));
         let received_clone = Arc::clone(&received);
 
@@ -120,13 +120,11 @@ mod tests {
         let received_ids = Arc::new(Mutex::new(Vec::new()));
         let received_ids_clone = Arc::clone(&received_ids);
 
-        system.subscribe(move |event| {
-            match event {
-                GameEvent::PuzzleSolved { puzzle_id, .. } => {
-                    received_ids_clone.lock().unwrap().push(puzzle_id.clone());
-                }
-                _ => {}
+        system.subscribe(move |event| match event {
+            GameEvent::PuzzleSolved { puzzle_id, .. } => {
+                received_ids_clone.lock().unwrap().push(puzzle_id.clone());
             }
+            _ => {}
         });
 
         // Emit events in a specific order: A -> B -> C
@@ -150,7 +148,10 @@ mod tests {
 
         // Verify FIFO order: A, then B, then C
         let ids = received_ids.lock().unwrap();
-        assert_eq!(*ids, vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+        assert_eq!(
+            *ids,
+            vec!["A".to_string(), "B".to_string(), "C".to_string()]
+        );
     }
 
     #[test]

@@ -61,7 +61,11 @@ impl Inventory {
     /// Queries the quantity of an item with the given `id`.
     /// Returns 0 if the item is not present.
     pub fn get_quantity(&self, id: &str) -> u32 {
-        self.items.iter().find(|i| i.id == id).map(|i| i.quantity).unwrap_or(0)
+        self.items
+            .iter()
+            .find(|i| i.id == id)
+            .map(|i| i.quantity)
+            .unwrap_or(0)
     }
 
     /// Queries an item by its `id`.
@@ -159,6 +163,9 @@ mod tests {
         let json_populated = populated.to_json().unwrap();
         let restored_populated = Inventory::from_json(&json_populated).unwrap();
         assert_eq!(restored_populated.get_quantity("sword"), 1);
-        assert_eq!(restored_populated.get_item("sword").unwrap().name, "Iron Sword");
+        assert_eq!(
+            restored_populated.get_item("sword").unwrap().name,
+            "Iron Sword"
+        );
     }
 }
