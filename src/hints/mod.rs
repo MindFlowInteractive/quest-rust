@@ -72,7 +72,12 @@ mod tests {
     use super::*;
 
     fn make_hints(texts: &[&str]) -> Vec<Hint> {
-        texts.iter().map(|t| Hint { text: t.to_string() }).collect()
+        texts
+            .iter()
+            .map(|t| Hint {
+                text: t.to_string(),
+            })
+            .collect()
     }
 
     #[test]
