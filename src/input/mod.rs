@@ -61,13 +61,12 @@ pub fn parse_input(input: &str) -> Result<GameAction, InputError> {
             if let Ok(num) = other.parse::<usize>() {
                 return Ok(GameAction::Select(num));
             }
-            
+
             // Attempt to parse option prefixed with 'select'
-            if other.starts_with("select ") {
-                let selection_part = other["select ".len()..].trim();
-                if let Ok(num) = selection_part.parse::<usize>() {
-                    return Ok(GameAction::Select(num));
-                }
+            if let Some(stripped) = other.strip_prefix("select ")
+                && let Ok(num) = stripped.trim().parse::<usize>()
+            {
+                return Ok(GameAction::Select(num));
             }
 
             Err(InputError::InvalidInput(input.to_string()))
@@ -82,7 +81,7 @@ pub fn read_action<R: BufRead>(reader: &mut R) -> Result<GameAction, InputError>
     reader
         .read_line(&mut buffer)
         .map_err(|e| InputError::InvalidInput(e.to_string()))?;
-    
+
     parse_input(&buffer)
 }
 

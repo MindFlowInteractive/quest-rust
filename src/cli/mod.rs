@@ -19,7 +19,8 @@ impl GameEngine {
         if input.trim().to_lowercase() == "stellar" {
             self.puzzle.is_solved = true;
             self.puzzle.current_score += 100;
-            self.unlocked_achievements.push("Soroban Pioneer".to_string());
+            self.unlocked_achievements
+                .push("Soroban Pioneer".to_string());
         }
     }
 }
@@ -39,7 +40,11 @@ impl<'a, R: BufRead, W: Write> CliModule<'a, R, W> {
     /// Renders the current layout coordinates to stdout
     pub fn render_frame(&mut self, state: &PuzzleState) -> io::Result<()> {
         writeln!(self.writer, "\n========================================")?;
-        writeln!(self.writer, "  PUZZLE SESSION | Score: {} pts", state.current_score)?;
+        writeln!(
+            self.writer,
+            "  PUZZLE SESSION | Score: {} pts",
+            state.current_score
+        )?;
         writeln!(self.writer, "========================================")?;
         writeln!(self.writer, "Description: {}", state.description)?;
         writeln!(self.writer, "Hint:        {}", state.hint)?;
@@ -51,8 +56,15 @@ impl<'a, R: BufRead, W: Write> CliModule<'a, R, W> {
     /// Renders a specialized banner when achievements or rewards unlock
     pub fn display_unlocks(&mut self, achievements: &[String]) -> io::Result<()> {
         for achievement in achievements {
-            writeln!(self.writer, "\n🎉 ACHIEVEMENT UNLOCKED: [{}] 🎉", achievement)?;
-            writeln!(self.writer, "🏆 +100 Base XP credited to profile registers.")?;
+            writeln!(
+                self.writer,
+                "\n🎉 ACHIEVEMENT UNLOCKED: [{}] 🎉",
+                achievement
+            )?;
+            writeln!(
+                self.writer,
+                "🏆 +100 Base XP credited to profile registers."
+            )?;
         }
         self.writer.flush()
     }
@@ -68,7 +80,7 @@ impl<'a, R: BufRead, W: Write> CliModule<'a, R, W> {
             // Clear buffer and read next line from terminal context stream
             input_buffer.clear();
             let bytes_read = self.reader.read_line(&mut input_buffer)?;
-            
+
             // Handle EOF/exit signals safely
             if bytes_read == 0 || input_buffer.trim() == "exit" {
                 writeln!(self.writer, "\nSession terminated. Goodbye!")?;
