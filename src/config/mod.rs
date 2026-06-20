@@ -5,6 +5,7 @@
 //! The resulting [`Config`] is a plain typed struct accessible anywhere in the
 //! application.
 
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -50,14 +51,14 @@ impl Config {
     /// - Returns the parsed config on success.
     /// - Returns [`Config::default`] if the file does not exist.
     /// - Returns an error for IO errors or malformed TOML.
-    pub fn load(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
+        pub fn load(path: impl AsRef<Path>) -> Result<Self, AppError> {
         let path = path.as_ref();
         if !path.exists() {
             return Ok(Config::default());
         }
-        let raw = fs::read_to_string(path).map_err(ConfigError::Io)?;
+        let raw = fs::read_to_string(path).map_err(AppError::Io)?;
         let partial: PartialConfig =
-            toml::from_str(&raw).map_err(|e| ConfigError::Parse(e.to_string()))?;
+            toml::from_str(&raw).map_err(|e| AppError::ConfigParse(e.to_string()))?;
         Ok(partial.into_config())
     }
 }
@@ -87,33 +88,12 @@ impl PartialConfig {
     }
 }
 
-// ── Error type ───────────────────────────────────────────────────────────────
-
-/// Errors that can occur while loading configuration.
-#[derive(Debug)]
-pub enum ConfigError {
-    /// An underlying IO error (e.g. permission denied).
-    Io(std::io::Error),
-    /// The TOML content could not be parsed.
-    Parse(String),
-}
-
-impl std::fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigError::Io(e) => write!(f, "config IO error: {e}"),
-            ConfigError::Parse(msg) => write!(f, "config parse error: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for ConfigError {}
-
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::errors::AppError;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
@@ -174,7 +154,7 @@ score_multiplier = 2.5
     fn invalid_toml_returns_parse_error() {
         let file = write_toml("not = [ valid toml");
         let err = Config::load(file.path()).expect_err("should fail");
-        assert!(matches!(err, ConfigError::Parse(_)));
+        assert!(matches!(err, AppError::ConfigParse(_)));
     }
 
     #[test]

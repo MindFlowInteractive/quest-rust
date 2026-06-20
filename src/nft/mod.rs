@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -19,10 +20,17 @@ impl NftModule {
         }
     }
 
-    pub fn mint(&mut self, player_id: String, milestone_type: String) -> Option<Achievement> {
+    pub fn mint(
+        &mut self,
+        player_id: String,
+        milestone_type: String,
+    ) -> Result<Achievement, AppError> {
         let key = (player_id.clone(), milestone_type.clone());
         if self.minted_achievements.contains_key(&key) {
-            None
+            Err(AppError::NftAlreadyMinted {
+                player_id,
+                milestone_type,
+            })
         } else {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
@@ -35,7 +43,7 @@ impl NftModule {
                 timestamp,
             };
             self.minted_achievements.insert(key, achievement.clone());
-            Some(achievement)
+            Ok(achievement)
         }
     }
 }
@@ -50,10 +58,10 @@ mod tests {
         let player_id = "player1".to_string();
         let milestone = "level10".to_string();
 
-        let achievement = nft_module.mint(player_id.clone(), milestone.clone());
+        let result = nft_module.mint(player_id.clone(), milestone.clone());
 
-        assert!(achievement.is_some());
-        let achievement = achievement.unwrap();
+        assert!(result.is_ok());
+        let achievement = result.unwrap();
         assert_eq!(achievement.player_id, player_id);
         assert_eq!(achievement.milestone_type, milestone);
         assert!(achievement.timestamp > 0);
@@ -65,10 +73,14 @@ mod tests {
         let player_id = "player1".to_string();
         let milestone = "level10".to_string();
 
-        let achievement1 = nft_module.mint(player_id.clone(), milestone.clone());
-        assert!(achievement1.is_some());
+        let result1 = nft_module.mint(player_id.clone(), milestone.clone());
+        assert!(result1.is_ok());
 
-        let achievement2 = nft_module.mint(player_id.clone(), milestone.clone());
-        assert!(achievement2.is_none());
+        let result2 = nft_module.mint(player_id.clone(), milestone.clone());
+        assert!(result2.is_err());
+        assert!(matches!(
+            result2.unwrap_err(),
+            AppError::NftAlreadyMinted { .. }
+        ));
     }
 }
