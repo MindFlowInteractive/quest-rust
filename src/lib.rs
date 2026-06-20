@@ -7,4 +7,5 @@ pub mod input;
 pub mod inventory;
 pub mod leaderboard;
 pub mod player;
+pub mod puzzle;
 pub mod nft;
