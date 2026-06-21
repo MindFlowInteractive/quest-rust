@@ -11,11 +11,10 @@ pub struct Entry {
 
 impl Ord for Entry {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Higher score comes first; if equal, earlier timestamp first
-        other
-            .score
-            .cmp(&self.score)
-            .then_with(|| self.timestamp.cmp(&other.timestamp))
+        // For leaderboard: higher scores should be "greater than" lower scores
+        // This makes higher scores sort to the front when using sort()
+        self.score.cmp(&other.score)
+            .then_with(|| other.timestamp.cmp(&self.timestamp)) // Earlier timestamp wins on tie
     }
 }
 
@@ -40,10 +39,10 @@ impl Leaderboard {
     }
 
     pub fn insert(&mut self, entry: Entry) {
-        // If board not full, just insert and sort
+        // If board not full, just insert and sort in descending order
         if self.entries.len() < self.max_entries {
             self.entries.push(entry);
-            self.entries.sort();
+            self.entries.sort_by(|a, b| b.cmp(a)); // Sort descending (highest first)
             return;
         }
         // Board full: compare with lowest-ranked (last after descending sort).
@@ -75,6 +74,7 @@ impl Leaderboard {
 #[cfg(test)]
 mod tests {
     use super::*;
+    
     #[test]
     fn insertion_and_ordering() {
         let mut lb = Leaderboard::new(3);
