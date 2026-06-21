@@ -238,10 +238,10 @@ mod tests {
     #[test]
     fn correct_action_solves_single_condition_puzzle() {
         let mut puzzle = single_condition_puzzle();
-        let effects = puzzle.evaluate("pull_lever");
+        let effects = puzzle.evaluate("pull_lever").to_vec();
         assert_eq!(puzzle.state, PuzzleState::Solved);
         assert!(puzzle.is_solved());
-        assert_eq!(effects, &[Effect::AwardScore(50)]);
+        assert_eq!(effects, vec![Effect::AwardScore(50)]);
     }
 
     // ── Multi-condition puzzles ────────────────────────────────────────────
@@ -249,7 +249,7 @@ mod tests {
     #[test]
     fn first_action_transitions_to_in_progress() {
         let mut puzzle = multi_condition_puzzle();
-        let effects = puzzle.evaluate("light_torch_a");
+        let effects = puzzle.evaluate("light_torch_a").to_vec();
         assert_eq!(puzzle.state, PuzzleState::InProgress);
         assert!(effects.is_empty());
     }
@@ -268,7 +268,7 @@ mod tests {
         let mut puzzle = multi_condition_puzzle();
         puzzle.evaluate("light_torch_a");
         puzzle.evaluate("light_torch_b");
-        let effects = puzzle.evaluate("light_torch_c");
+        let effects = puzzle.evaluate("light_torch_c").to_vec();
 
         assert_eq!(puzzle.state, PuzzleState::Solved);
         assert!(puzzle.is_solved());
@@ -309,7 +309,7 @@ mod tests {
         let mut puzzle = multi_condition_puzzle();
         puzzle.evaluate("light_torch_c");
         puzzle.evaluate("light_torch_a");
-        let effects = puzzle.evaluate("light_torch_b");
+        let effects = puzzle.evaluate("light_torch_b").to_vec();
         assert_eq!(puzzle.state, PuzzleState::Solved);
         assert!(!effects.is_empty());
     }
@@ -328,9 +328,9 @@ mod tests {
         // after a condition fires or state is InProgress.
         // A puzzle with no conditions is already fully met — first evaluate
         // call should recognise this and jump to Solved.
-        let effects = puzzle.evaluate("anything");
+        let effects = puzzle.evaluate("anything").to_vec();
         assert_eq!(puzzle.state, PuzzleState::Solved);
-        assert_eq!(effects, &[Effect::AwardScore(10)]);
+        assert_eq!(effects, vec![Effect::AwardScore(10)]);
     }
 
     // ── Serialization round-trip ───────────────────────────────────────────
