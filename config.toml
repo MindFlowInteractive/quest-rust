@@ -1,0 +1,9 @@
+# Quest Rust — runtime configuration
+# All values here are the application defaults.
+# Delete any key to have the code fall back to the hardcoded default.
+
+save_path        = "save_data"
+log_path         = "logs/game.log"
+difficulty       = "medium"
+max_hints        = 3
+score_multiplier = 1.0

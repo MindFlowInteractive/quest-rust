@@ -5,6 +5,7 @@
 //! state is fully serializable via `serde` so it can be persisted between
 //! sessions and restored later.
 
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 
 /// Persistent state for a single player.
@@ -72,13 +73,13 @@ impl Player {
     }
 
     /// Serializes the player state to a JSON string.
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
-        serde_json::to_string(self)
+    pub fn to_json(&self) -> Result<String, AppError> {
+        Ok(serde_json::to_string(self)?)
     }
 
     /// Deserializes a player from a JSON string.
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
+    pub fn from_json(json: &str) -> Result<Self, AppError> {
+        Ok(serde_json::from_str(json)?)
     }
 }
 

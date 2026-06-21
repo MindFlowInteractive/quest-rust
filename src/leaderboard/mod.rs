@@ -1,3 +1,4 @@
+use crate::errors::AppError;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 
@@ -44,13 +45,15 @@ impl Leaderboard {
             self.entries.sort_by(|a, b| b.cmp(a)); // Sort descending (highest first)
             return;
         }
-        // Board full: compare with lowest (last after sort)
-        if let Some(worst) = self.entries.last() {
-            if entry > *worst {
-                self.entries.pop();
-                self.entries.push(entry);
-                self.entries.sort_by(|a, b| b.cmp(a)); // Sort descending
-            }
+        // Board full: compare with lowest-ranked (last after descending sort).
+        // Our Ord puts higher scores first, so `entry < *worst` means entry
+        // outranks worst (has a higher score).
+        if let Some(worst) = self.entries.last()
+            && entry < *worst
+        {
+            self.entries.pop();
+            self.entries.push(entry);
+            self.entries.sort();
         }
     }
 
@@ -59,12 +62,12 @@ impl Leaderboard {
     }
 
     // Helpers for serialization
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
+    pub fn to_json(&self) -> Result<String, AppError> {
+        Ok(serde_json::to_string(&self)?)
     }
 
-    pub fn from_json(s: &str) -> Self {
-        serde_json::from_str(s).unwrap()
+    pub fn from_json(s: &str) -> Result<Self, AppError> {
+        Ok(serde_json::from_str(s)?)
     }
 }
 
@@ -75,9 +78,21 @@ mod tests {
     #[test]
     fn insertion_and_ordering() {
         let mut lb = Leaderboard::new(3);
-        lb.insert(Entry { player_id: "a".into(), score: 10, timestamp: 1 });
-        lb.insert(Entry { player_id: "b".into(), score: 30, timestamp: 2 });
-        lb.insert(Entry { player_id: "c".into(), score: 20, timestamp: 3 });
+        lb.insert(Entry {
+            player_id: "a".into(),
+            score: 10,
+            timestamp: 1,
+        });
+        lb.insert(Entry {
+            player_id: "b".into(),
+            score: 30,
+            timestamp: 2,
+        });
+        lb.insert(Entry {
+            player_id: "c".into(),
+            score: 20,
+            timestamp: 3,
+        });
         let scores: Vec<u64> = lb.top().iter().map(|e| e.score).collect();
         assert_eq!(scores, vec![30, 20, 10]);
     }
@@ -85,13 +100,29 @@ mod tests {
     #[test]
     fn replacement_when_full() {
         let mut lb = Leaderboard::new(2);
-        lb.insert(Entry { player_id: "a".into(), score: 10, timestamp: 1 });
-        lb.insert(Entry { player_id: "b".into(), score: 20, timestamp: 2 });
+        lb.insert(Entry {
+            player_id: "a".into(),
+            score: 10,
+            timestamp: 1,
+        });
+        lb.insert(Entry {
+            player_id: "b".into(),
+            score: 20,
+            timestamp: 2,
+        });
         // Insert lower score – should be ignored
-        lb.insert(Entry { player_id: "c".into(), score: 5, timestamp: 3 });
+        lb.insert(Entry {
+            player_id: "c".into(),
+            score: 5,
+            timestamp: 3,
+        });
         assert_eq!(lb.top().len(), 2);
         // Insert higher score – should replace lowest (10)
-        lb.insert(Entry { player_id: "d".into(), score: 30, timestamp: 4 });
+        lb.insert(Entry {
+            player_id: "d".into(),
+            score: 30,
+            timestamp: 4,
+        });
         let ids: Vec<&str> = lb.top().iter().map(|e| e.player_id.as_str()).collect();
         assert!(ids.contains(&"b") && ids.contains(&"d"));
         assert!(!ids.contains(&"a"));
@@ -100,9 +131,13 @@ mod tests {
     #[test]
     fn serialization_roundtrip() {
         let mut lb = Leaderboard::new(2);
-        lb.insert(Entry { player_id: "x".into(), score: 100, timestamp: 10 });
-        let json = lb.to_json();
-        let restored = Leaderboard::from_json(&json);
+        lb.insert(Entry {
+            player_id: "x".into(),
+            score: 100,
+            timestamp: 10,
+        });
+        let json = lb.to_json().expect("serialize");
+        let restored = Leaderboard::from_json(&json).expect("deserialize");
         assert_eq!(lb.top(), restored.top());
     }
 }
