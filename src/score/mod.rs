@@ -30,6 +30,17 @@ impl Score {
     pub fn get_high_score(&self) -> u32 {
         self.high_score
     }
+
+    /// Awards a time bonus based on elapsed milliseconds: faster completions earn more points.
+    /// Bonus = difficulty * 1000 / (elapsed_ms / 100 + 1), capped to prevent overflow.
+    pub fn apply_time_bonus(&mut self, elapsed_ms: u64, difficulty: u32) {
+        let time_units = (elapsed_ms / 100) as u32;
+        let bonus = difficulty.saturating_mul(1000) / (time_units + 1);
+        self.current_score = self.current_score.saturating_add(bonus);
+        if self.current_score > self.high_score {
+            self.high_score = self.current_score;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -51,6 +62,23 @@ mod tests {
         score.add_score(2, 5);
         assert_eq!(score.get_current_score(), 42);
         assert_eq!(score.get_high_score(), 42);
+    }
+
+    #[test]
+    fn test_apply_time_bonus_fast_completion() {
+        let mut score = Score::new();
+        score.apply_time_bonus(500, 2); // 500ms elapsed, difficulty 2
+        assert!(score.get_current_score() > 0);
+        assert_eq!(score.get_current_score(), score.get_high_score());
+    }
+
+    #[test]
+    fn test_apply_time_bonus_slow_completion_less_reward() {
+        let mut score = Score::new();
+        let mut fast_score = Score::new();
+        score.apply_time_bonus(10_000, 2); // 10 seconds
+        fast_score.apply_time_bonus(500, 2); // 0.5 seconds
+        assert!(fast_score.get_current_score() > score.get_current_score());
     }
 
     #[test]
