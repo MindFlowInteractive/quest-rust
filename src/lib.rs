@@ -11,3 +11,5 @@ pub mod leaderboard;
 pub mod player;
 pub mod puzzle;
 pub mod nft;
+pub mod score;
+pub mod timer;
