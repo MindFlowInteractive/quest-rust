@@ -5,3 +5,4 @@ pub mod player;
 pub mod events;
 pub mod inventory;
 pub mod input;
+pub mod session;
