@@ -51,7 +51,7 @@ impl Config {
     /// - Returns the parsed config on success.
     /// - Returns [`Config::default`] if the file does not exist.
     /// - Returns an error for IO errors or malformed TOML.
-        pub fn load(path: impl AsRef<Path>) -> Result<Self, AppError> {
+    pub fn load(path: impl AsRef<Path>) -> Result<Self, AppError> {
         let path = path.as_ref();
         if !path.exists() {
             return Ok(Config::default());

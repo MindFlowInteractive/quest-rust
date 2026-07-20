@@ -13,7 +13,8 @@ impl Ord for Entry {
     fn cmp(&self, other: &Self) -> Ordering {
         // For leaderboard: higher scores should be "greater than" lower scores
         // This makes higher scores sort to the front when using sort()
-        self.score.cmp(&other.score)
+        self.score
+            .cmp(&other.score)
             .then_with(|| other.timestamp.cmp(&self.timestamp)) // Earlier timestamp wins on tie
     }
 }
@@ -74,7 +75,7 @@ impl Leaderboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn insertion_and_ordering() {
         let mut lb = Leaderboard::new(3);
