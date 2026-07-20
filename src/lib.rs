@@ -1,5 +1,4 @@
 pub mod cli;
-pub mod logic;
 pub mod config;
 pub mod difficulty;
 pub mod errors;
@@ -8,8 +7,10 @@ pub mod hints;
 pub mod input;
 pub mod inventory;
 pub mod leaderboard;
+pub mod logic;
+pub mod nft;
+pub mod persistence;
 pub mod player;
 pub mod puzzle;
-pub mod nft;
 pub mod score;
 pub mod timer;

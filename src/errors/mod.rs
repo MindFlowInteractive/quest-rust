@@ -54,6 +54,10 @@ pub enum AppError {
     // ── Leaderboard ──────────────────────────────────────────────────────────
     /// A leaderboard-domain error.
     Leaderboard(String),
+
+    // ── Persistence ──────────────────────────────────────────────────────────
+    /// A persistence/storage error (e.g. corrupted save, version mismatch).
+    Persistence(String),
 }
 
 // ── Display ──────────────────────────────────────────────────────────────────
@@ -81,6 +85,7 @@ impl fmt::Display for AppError {
             }
             AppError::Puzzle(msg) => write!(f, "puzzle error: {msg}"),
             AppError::Leaderboard(msg) => write!(f, "leaderboard error: {msg}"),
+            AppError::Persistence(msg) => write!(f, "persistence error: {msg}"),
         }
     }
 }
@@ -191,6 +196,12 @@ mod tests {
         assert_eq!(err.to_string(), "leaderboard error: capacity reached");
     }
 
+    #[test]
+    fn display_persistence_error() {
+        let err = AppError::Persistence("corrupted file".into());
+        assert_eq!(err.to_string(), "persistence error: corrupted file");
+    }
+
     // ── Error trait tests ────────────────────────────────────────────────────
 
     #[test]
@@ -213,15 +224,22 @@ mod tests {
         assert!(AppError::InputInvalid("x".into()).source().is_none());
         assert!(AppError::InputEmpty.source().is_none());
         assert!(AppError::PlayerNotFound("x".into()).source().is_none());
-        assert!(AppError::InventoryItemNotFound("x".into()).source().is_none());
+        assert!(
+            AppError::InventoryItemNotFound("x".into())
+                .source()
+                .is_none()
+        );
         assert!(AppError::Puzzle("x".into()).source().is_none());
         assert!(AppError::Leaderboard("x".into()).source().is_none());
-        assert!(AppError::NftAlreadyMinted {
-            player_id: "p".into(),
-            milestone_type: "m".into(),
-        }
-        .source()
-        .is_none());
+        assert!(AppError::Persistence("x".into()).source().is_none());
+        assert!(
+            AppError::NftAlreadyMinted {
+                player_id: "p".into(),
+                milestone_type: "m".into(),
+            }
+            .source()
+            .is_none()
+        );
     }
 
     // ── From impl tests ──────────────────────────────────────────────────────

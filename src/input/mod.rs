@@ -105,7 +105,10 @@ mod tests {
         assert!(matches!(parse_input("1"), Ok(GameAction::Select(1))));
         assert!(matches!(parse_input("42"), Ok(GameAction::Select(42))));
         assert!(matches!(parse_input("select 3"), Ok(GameAction::Select(3))));
-        assert!(matches!(parse_input("  select   5  "), Ok(GameAction::Select(5))));
+        assert!(matches!(
+            parse_input("  select   5  "),
+            Ok(GameAction::Select(5))
+        ));
     }
 
     #[test]
