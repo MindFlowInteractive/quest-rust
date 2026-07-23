@@ -39,21 +39,17 @@ impl Leaderboard {
     }
 
     pub fn insert(&mut self, entry: Entry) {
-        // If board not full, just insert and sort in descending order
         if self.entries.len() < self.max_entries {
             self.entries.push(entry);
-            self.entries.sort_by(|a, b| b.cmp(a)); // Sort descending (highest first)
+            self.entries.sort_by(|a, b| b.cmp(a));
             return;
         }
-        // Board full: compare with lowest-ranked (last after descending sort).
-        // Our Ord puts higher scores first, so `entry < *worst` means entry
-        // outranks worst (has a higher score).
-        if let Some(worst) = self.entries.last()
-            && entry < *worst
-        {
-            self.entries.pop();
-            self.entries.push(entry);
-            self.entries.sort();
+        if let Some(worst) = self.entries.last() {
+            if entry.cmp(worst) == Ordering::Greater {
+                self.entries.pop();
+                self.entries.push(entry);
+                self.entries.sort_by(|a, b| b.cmp(a));
+            }
         }
     }
 

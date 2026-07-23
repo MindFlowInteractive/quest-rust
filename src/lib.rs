@@ -14,3 +14,4 @@ pub mod puzzle;
 pub mod nft;
 pub mod score;
 pub mod timer;
+pub mod generator;
