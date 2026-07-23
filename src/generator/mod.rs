@@ -335,6 +335,18 @@ pub fn generate(difficulty: Difficulty, category: impl Into<Category>, seed: u64
     puzzle
 }
 
+// ── Daily Challenge ──────────────────────────────────────────────────────────
+
+/// Generates a daily challenge puzzle seeded by the given `date` (or current UTC date if `None`).
+pub fn generate_daily_challenge(date: Option<chrono::NaiveDate>) -> Puzzle {
+    use chrono::Datelike;
+    let target_date = date.unwrap_or_else(|| chrono::Utc::now().date_naive());
+    let seed = (target_date.year() as u64) * 10000
+        + (target_date.month() as u64) * 100
+        + (target_date.day() as u64);
+    generate(Difficulty::Medium, Category::Logic, seed)
+}
+
 // ── Solvability Validation ───────────────────────────────────────────────────
 
 /// Validates that `puzzle` is solvable by passing its conditions through
@@ -487,5 +499,14 @@ mod tests {
         let loaded = crate::loader::load_puzzle_file(&file_path).expect("load via loader module");
         assert_eq!(loaded.id, puzzle.id);
         assert_eq!(loaded.content_hash, puzzle.content_hash);
+    }
+
+    #[test]
+    fn daily_challenge_is_deterministic_for_same_date() {
+        let date = chrono::NaiveDate::from_ymd_opt(2026, 7, 23).unwrap();
+        let puzzle1 = generate_daily_challenge(Some(date));
+        let puzzle2 = generate_daily_challenge(Some(date));
+        assert_eq!(puzzle1, puzzle2);
+        assert!(validate_solvability(&puzzle1));
     }
 }
