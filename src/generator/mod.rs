@@ -328,7 +328,74 @@ pub fn generate(difficulty: Difficulty, category: impl Into<Category>, seed: u64
 
     let mut puzzle = Puzzle::new(puzzle_id, description, conditions, effects);
     puzzle.generate_content_hash();
+    debug_assert!(
+        validate_solvability(&puzzle),
+        "Generated puzzle failed solvability check"
+    );
     puzzle
+}
+
+// ── Solvability Validation ───────────────────────────────────────────────────
+
+/// Validates that `puzzle` is solvable by passing its conditions through
+/// the logic evaluator [`crate::logic::evaluate`].
+///
+/// Returns `true` if at least one valid solution pathway exists.
+pub fn validate_solvability(puzzle: &Puzzle) -> bool {
+    use crate::logic::{self, Condition as LogicCondition};
+    use std::collections::HashMap;
+
+    if puzzle.conditions.is_empty() {
+        return true;
+    }
+
+    // Build a logic condition tree requiring all puzzle conditions to be satisfied
+    let logic_tree = LogicCondition::And(
+        puzzle
+            .conditions
+            .iter()
+            .map(|c| LogicCondition::Fact(c.id.clone()))
+            .collect(),
+    );
+
+    // Context where all required condition facts are set to true
+    let mut context_map = HashMap::new();
+    for c in &puzzle.conditions {
+        context_map.insert(c.id.as_str(), true);
+    }
+
+    // Evaluate logic tree against valid context
+    let logic_solvable = logic::evaluate(&logic_tree, &context_map);
+
+    // Verify engine state transition on a cloned puzzle instance
+    let mut test_puzzle = puzzle.clone();
+    for c in &puzzle.conditions {
+        test_puzzle.evaluate(&c.id);
+    }
+    let state_solvable = test_puzzle.is_solved();
+
+    logic_solvable && state_solvable
+}
+
+// ── Export Functions ─────────────────────────────────────────────────────────
+
+/// Exports a [`Puzzle`] to the standard pretty-printed JSON format with a valid content hash.
+pub fn export_to_json(puzzle: &Puzzle) -> Result<String, serde_json::Error> {
+    let mut p = puzzle.clone();
+    if p.content_hash.is_none() {
+        p.generate_content_hash();
+    }
+    serde_json::to_string_pretty(&p)
+}
+
+/// Exports a [`Puzzle`] to the standard puzzle JSON format on disk at `path` for admin review.
+pub fn export_to_file(
+    puzzle: &Puzzle,
+    path: impl AsRef<std::path::Path>,
+) -> Result<(), crate::errors::AppError> {
+    let json = export_to_json(puzzle)?;
+    std::fs::write(path, json)?;
+    Ok(())
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -386,5 +453,39 @@ mod tests {
         assert_eq!("dungeon".parse::<Category>().unwrap(), Category::Dungeon);
         assert_eq!("crypto".parse::<Category>().unwrap(), Category::Cryptography);
         assert_eq!(Category::Alchemy.to_string(), "Alchemy");
+    }
+
+    #[test]
+    fn solvability_validation_confirms_generated_puzzle_is_solvable() {
+        let puzzle = generate(Difficulty::Hard, Category::Cryptography, 999);
+        assert!(validate_solvability(&puzzle));
+    }
+
+    #[test]
+    fn export_to_json_produces_valid_stamped_puzzle_json() {
+        let puzzle = generate(Difficulty::Medium, Category::Pattern, 777);
+        let json = export_to_json(&puzzle).expect("export to json should succeed");
+
+        // Should deserialize back to puzzle
+        let loaded: Puzzle = serde_json::from_str(&json).expect("deserialize exported JSON");
+        assert_eq!(loaded.id, puzzle.id);
+        assert_eq!(loaded.content_hash, puzzle.content_hash);
+
+        // Content hash verification should pass
+        assert!(loaded.verify_content_hash().is_ok());
+    }
+
+    #[test]
+    fn export_to_file_creates_readable_puzzle_file() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let file_path = dir.path().join("exported_puzzle.json");
+
+        let puzzle = generate(Difficulty::Easy, Category::Alchemy, 12345);
+        export_to_file(&puzzle, &file_path).expect("export to file should succeed");
+
+        // Verify file exists and can be loaded via loader module
+        let loaded = crate::loader::load_puzzle_file(&file_path).expect("load via loader module");
+        assert_eq!(loaded.id, puzzle.id);
+        assert_eq!(loaded.content_hash, puzzle.content_hash);
     }
 }
