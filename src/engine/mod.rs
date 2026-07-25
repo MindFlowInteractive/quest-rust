@@ -1,8 +1,11 @@
 use crate::errors::AppError;
 use crate::plugin::{EvalResult, PluginRegistry, PuzzlePlugin};
 use crate::puzzle::Puzzle;
+use crate::time::Instant;
 use std::collections::HashMap;
-use std::{thread::sleep, time::{Duration, Instant}};
+use std::thread::sleep;
+use std::time::Duration;
+
 
 /// Core game engine that manages the main loop and lifecycle.
 pub struct Engine {
