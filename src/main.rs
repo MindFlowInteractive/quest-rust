@@ -8,15 +8,17 @@ const DEFAULT_PUZZLES_DIR: &str = "puzzles";
 
 fn main() {
     use smart_contract_game::player::Player;
+    use smart_contract_game::replay::ReplaySession;
 
     let args: Vec<String> = std::env::args().collect();
-    
-    let lang = args.iter()
+
+    let lang = args
+        .iter()
         .position(|a| a == "--lang")
         .and_then(|i| args.get(i + 1))
         .cloned()
         .unwrap_or_else(|| "en".to_string());
-        
+
     let l10n = L10n::new(&lang);
 
     if args.iter().any(|a| a == "--verify-puzzles") {
@@ -33,8 +35,28 @@ fn main() {
         ));
     }
 
+    if let Some(pos) = args.iter().position(|a| a == "--playback") {
+        let file = args.get(pos + 1).cloned().unwrap_or_default();
+        let speed = args
+            .iter()
+            .position(|a| a == "--speed")
+            .and_then(|i| args.get(i + 1))
+            .and_then(|s| s.parse::<u32>().ok())
+            .unwrap_or(1);
+        match ReplaySession::load(&file) {
+            Ok(replay) => {
+                replay.playback(speed);
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("Failed to load replay '{}': {e}", file);
+                std::process::exit(1);
+            }
+        }
+    }
+
     let mut engine = engine::Engine::new(Duration::from_millis(16));
-    
+
     // Register the built-in core logic plugin with the engine
     use smart_contract_game::plugin::core_logic_plugin::CoreLogicPlugin;
     if let Err(e) = engine.register_plugin(Box::new(CoreLogicPlugin)) {
@@ -58,11 +80,17 @@ fn main() {
 
     match player.to_json() {
         Ok(json) => println!("Player state: {json}"),
-        Err(e) => eprintln!("{}", l10n.get("error-serialize-player", Some(&{
-            let mut args = fluent::FluentArgs::new();
-            args.set("error", e.to_string());
-            args
-        }))),
+        Err(e) => eprintln!(
+            "{}",
+            l10n.get(
+                "error-serialize-player",
+                Some(&{
+                    let mut args = fluent::FluentArgs::new();
+                    args.set("error", e.to_string());
+                    args
+                })
+            )
+        ),
     }
 }
 
@@ -93,10 +121,18 @@ fn run_verify_puzzles(dir: &str, l10n: &L10n) -> i32 {
     let mut failures = 0;
     for report in &reports {
         match &report.result {
-            Ok(()) => println!("{}   {}", l10n.get("ok-status", None), report.path.display()),
+            Ok(()) => println!(
+                "{}   {}",
+                l10n.get("ok-status", None),
+                report.path.display()
+            ),
             Err(e) => {
                 failures += 1;
-                println!("{} {}: {e}", l10n.get("fail-status", None), report.path.display());
+                println!(
+                    "{} {}: {e}",
+                    l10n.get("fail-status", None),
+                    report.path.display()
+                );
             }
         }
     }
