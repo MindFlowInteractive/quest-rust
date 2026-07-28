@@ -33,17 +33,8 @@ fn main() {
         ));
     }
 
-    let mut engine = engine::Engine::new(Duration::from_millis(16));
-    
-    // Register the built-in core logic plugin with the engine
-    use smart_contract_game::plugin::core_logic_plugin::CoreLogicPlugin;
-    if let Err(e) = engine.register_plugin(Box::new(CoreLogicPlugin)) {
-        eprintln!("Failed to register built-in plugins: {e}");
-        std::process::exit(1);
-    }
-
-    if args.iter().any(|a| a == "--list-plugins") {
-        std::process::exit(run_list_plugins(&engine));
+    if args.iter().any(|a| a == "--daily-challenge") {
+        std::process::exit(run_daily_challenge(&args));
     }
 
     // Initialize and run the core engine for a short duration to ensure clean startup/shutdown.
@@ -145,15 +136,30 @@ fn run_generate_hashes(dir: &str, admin_confirmed: bool, l10n: &L10n) -> i32 {
     }
 }
 
-/// Runs the `--list-plugins` command: enumerates all registered plugins
-/// and prints their metadata. Returns the process exit code.
-fn run_list_plugins(engine: &smart_contract_game::engine::Engine) -> i32 {
-    let plugins = engine.list_plugins();
-    println!("Registered Plugins ({} total):", plugins.len());
-    for (id, meta) in plugins {
-        println!("\n• ID:      {id}");
-        println!("  Name:    {} (v{})", meta.name, meta.version);
-        println!("  Summary: {}", meta.description);
+/// Runs the `--daily-challenge` command: generates and launches a seeded puzzle
+/// based on the current date (or a specific date passed with `--date YYYY-MM-DD`).
+fn run_daily_challenge(args: &[String]) -> i32 {
+    use smart_contract_game::generator::generate_daily_challenge;
+
+    let date_arg = args
+        .iter()
+        .position(|a| a == "--date")
+        .and_then(|i| args.get(i + 1))
+        .and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok());
+
+    let puzzle = generate_daily_challenge(date_arg);
+
+    println!("==================================================");
+    println!("             DAILY CHALLENGE PUZZLE              ");
+    println!("==================================================");
+    println!("ID:          {}", puzzle.id);
+    println!("Description: {}", puzzle.description);
+    println!("Conditions:  {}", puzzle.conditions.len());
+    for (i, cond) in puzzle.conditions.iter().enumerate() {
+        println!("  {}. [{}] {}", i + 1, cond.id, cond.description);
     }
+    println!("Hash:        {}", puzzle.content_hash.as_deref().unwrap_or("None"));
+    println!("==================================================");
+
     0
 }

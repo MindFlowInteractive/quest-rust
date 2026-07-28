@@ -23,8 +23,4 @@ pub mod nft;
 pub mod plugin;
 pub mod score;
 pub mod timer;
-pub mod time;
-pub mod persistence;
-
-#[cfg(feature = "wasm")]
-pub mod wasm;
+pub mod generator;
