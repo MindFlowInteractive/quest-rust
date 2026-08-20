@@ -1,52 +1,65 @@
-use crate::errors::AppError;
-use crate::player::Player;
+use tokio::fs;
+use std::io;
+use std::path::Path;
 
-#[cfg(not(feature = "wasm"))]
-pub fn save_player(player: &Player, path: &str) -> Result<(), AppError> {
-    use std::fs;
-    let json = player.to_json()?;
-    fs::write(path, json).map_err(AppError::Io)?;
-    Ok(())
-}
-
-#[cfg(not(feature = "wasm"))]
-pub fn load_player(path: &str) -> Result<Option<Player>, AppError> {
-    use std::fs;
-    use std::path::Path;
-    if !Path::new(path).exists() {
-        return Ok(None);
+pub async fn ensure_storage_dir(dir_path: &str) -> Result<(), io::Error> {
+    let path = Path::new(dir_path);
+    if !path.exists() {
+        fs::create_dir_all(path).await?;
     }
-    let json = fs::read_to_string(path).map_err(AppError::Io)?;
-    let player = Player::from_json(&json)?;
-    Ok(Some(player))
-}
-
-#[cfg(feature = "wasm")]
-pub fn save_player(player: &Player, path: &str) -> Result<(), AppError> {
-    let window = web_sys::window().expect("no global window exists");
-    let local_storage = window
-        .local_storage()
-        .expect("should have local storage")
-        .expect("local storage is missing");
-    let json = player.to_json()?;
-    local_storage
-        .set_item(path, &json)
-        .map_err(|_| AppError::Io(std::io::Error::new(std::io::ErrorKind::Other, "localStorage error")))?;
     Ok(())
 }
 
-#[cfg(feature = "wasm")]
-pub fn load_player(path: &str) -> Result<Option<Player>, AppError> {
-    let window = web_sys::window().expect("no global window exists");
-    let local_storage = window
-        .local_storage()
-        .expect("should have local storage")
-        .expect("local storage is missing");
-    
-    if let Ok(Some(json)) = local_storage.get_item(path) {
-        let player = Player::from_json(&json)?;
-        Ok(Some(player))
-    } else {
-        Ok(None)
+pub async fn save_game_state(file_path: &str, contents: &[u8]) -> Result<(), io::Error> {
+    if let Some(parent) = Path::new(file_path).parent {
+        if !parent.as_os_str().is_empty() && !parent.exists() {
+            fs::create_dir_all(parent).await?;
+        }
+    }
+    fs::write(file_path, contents).await?;
+    Ok(())
+}
+
+pub async fn load_game_state(file_path: &str) -> Result<Vec<u8>, io::Error> {
+    let bytes = fs::read(file_path).await?;
+    Ok(bytes)
+}
+
+pub async fn remove_game_state(file_path: &str) -> Result<(), io::Error> {
+    fs::remove_file(file_path).await?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn test_async_save_and_load_state() {
+        let dir = tempdir().unwrap();
+        let file_path = dir.path().join("save_state.dat");
+        let path_str = file_path.to_str().unwrap();
+
+        let payload = b"{\"player\": \"hero\", \"score\": 5000}";
+
+        // Test asynchronous write
+        let save_result = save_game_state(path_str, payload).await;
+        assert!(save_result.is_ok(), "Failed to save game state asynchronously");
+
+        // Test asynchronous read
+        let loaded_data = load_game_state(path_str).await;
+        assert!(loaded_data.is_ok(), "Failed to load game state asynchronously");
+        assert_eq!(loaded_data.unwrap(), payload);
+
+        // Cleanup
+        let remove_result = remove_game_state(path_str).await;
+        assert!(remove_result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_async_load_non_existent_file() {
+        let result = load_game_state("non_existent_save_file_9999.dat").await;
+        assert!(result.is_err(), "Expected an error when reading a non-existent file");
     }
 }
