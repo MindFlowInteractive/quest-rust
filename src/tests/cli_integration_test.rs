@@ -48,3 +48,97 @@ fn test_full_successful_puzzle_session_via_cli() {
     assert!(terminal_output.contains("ACHIEVEMENT UNLOCKED: [Soroban Pioneer]"));
     assert!(terminal_output.contains("Puzzle Completed Successfully!"));
 }
+
+use std::sync::Arc;
+use async_trait::async_trait;
+use tokio::sync::Mutex;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum GameEvent {
+    PlayerMoved { x: i32, y: i32 },
+    ItemMinted { item_id: String },
+}
+
+#[async_trait]
+pub trait EventListener: Send + Sync {
+    async fn handle(&self, event: GameEvent) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+}
+
+pub struct EventBus {
+    listeners: Vec<Arc<dyn EventListener>>,
+}
+
+impl EventBus {
+    pub fn new() -> Self {
+        Self { listeners: Vec::new() }
+    }
+
+    pub fn register(&mut self, listener: Arc<dyn EventListener>) {
+        self.listeners.push(listener);
+    }
+
+    pub async fn dispatch(&self, event: GameEvent) {
+        for listener in &self.listeners {
+            let listener_clone = Arc::clone(listener);
+            let event_clone = event.clone();
+
+            // Spawn each listener onto the Tokio runtime concurrently
+            tokio::spawn(async move {
+                if let Err(err) = listener_clone.handle(event_clone).await {
+                    eprintln!("Error handling event asynchronously: {}", err);
+                }
+            });
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use tokio::time::{sleep, Duration};
+
+    struct CountingListener {
+        counter: Arc<AtomicUsize>,
+        delay_ms: u64,
+    }
+
+    #[async_trait]
+    impl EventListener for CountingListener {
+        async fn handle(&self, _event: GameEvent) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            if self.delay_ms > 0 {
+                sleep(Duration::from_millis(self.delay_ms)).await;
+            }
+            self.counter.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn test_concurrent_event_dispatch() {
+        let counter = Arc::new(AtomicUsize::new(0));
+        
+        let listener_one = Arc::new(CountingListener {
+            counter: Arc::clone(&counter),
+            delay_ms: 10,
+        });
+        
+        let listener_two = Arc::new(CountingListener {
+            counter: Arc::clone(&counter),
+            delay_ms: 5,
+        });
+
+        let mut bus = EventBus::new();
+        bus.register(listener_one);
+        bus.register(listener_two);
+
+        // Dispatch event asynchronously to all registered listeners
+        bus.dispatch(GameEvent::ItemMinted { item_id: "nft_123".into() }).await;
+
+        // Allow background spawned tasks time to complete execution
+        sleep(Duration::from_millis(30)).await;
+
+        // Verify that both listeners successfully handled the event concurrently
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+}
