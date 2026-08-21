@@ -2,10 +2,10 @@
 //!
 //! Manages a single play session, tying together player, puzzle progress, timer, and score.
 
+use crate::leaderboard::{Entry, Leaderboard};
 use crate::player::Player;
-use crate::leaderboard::{Leaderboard, Entry};
-use std::time::Duration;
 use crate::time::Instant;
+use std::time::Duration;
 
 #[derive(Debug)]
 pub struct Session {
@@ -52,10 +52,10 @@ impl Timer {
     }
 
     fn stop(&mut self) -> Duration {
-        if let Some(start) = self.start_time {
-            if !self.is_paused {
-                self.elapsed = start.elapsed();
-            }
+        if let Some(start) = self.start_time
+            && !self.is_paused
+        {
+            self.elapsed = start.elapsed();
         }
         self.elapsed
     }
@@ -95,7 +95,7 @@ impl Session {
     pub fn end(mut self) -> SessionData {
         let total_time = self.timer.stop();
         let final_score = self.player.score + self.current_score;
-        
+
         SessionData {
             player_id: self.player.id,
             final_score,
@@ -159,7 +159,7 @@ mod tests {
     fn session_creation() {
         let player = Player::new("test");
         let session = Session::new(player);
-        
+
         assert_eq!(session.player().id, "test");
         assert_eq!(session.current_score(), 0);
         assert_eq!(session.active_puzzle(), Some(0));
@@ -169,13 +169,13 @@ mod tests {
     fn session_lifecycle() {
         let player = Player::new("test");
         let mut session = Session::new(player);
-        
+
         session.start();
         session.add_score(100);
         session.pause();
-        
+
         assert_eq!(session.current_score(), 100);
-        
+
         let data = session.end();
         assert_eq!(data.player_id, "test");
         assert_eq!(data.final_score, 100);
@@ -186,10 +186,10 @@ mod tests {
     fn puzzle_completion() {
         let player = Player::new("test");
         let mut session = Session::new(player);
-        
+
         session.add_score(50);
         session.complete_puzzle();
-        
+
         assert_eq!(session.player().score, 50);
         assert_eq!(session.player().current_puzzle_index, 1);
         assert_eq!(session.active_puzzle(), Some(1));
@@ -201,14 +201,14 @@ mod tests {
         let player = Player::new("test");
         let mut session = Session::new(player);
         let mut leaderboard = Leaderboard::new(10);
-        
+
         session.start();
         session.add_score(200);
         session.complete_puzzle();
-        
+
         let data = session.end();
         save_session_data(&data, &mut leaderboard);
-        
+
         assert_eq!(leaderboard.top().len(), 1);
         assert_eq!(leaderboard.top()[0].score, 200);
         assert_eq!(leaderboard.top()[0].player_id, "test");
@@ -235,7 +235,10 @@ mod tests {
         let data = session.end();
         assert_eq!(
             data.puzzle_content_hashes,
-            vec!["hash-of-puzzle-1".to_string(), "hash-of-puzzle-2".to_string()]
+            vec![
+                "hash-of-puzzle-1".to_string(),
+                "hash-of-puzzle-2".to_string()
+            ]
         );
         assert_eq!(data.final_score, 80);
     }

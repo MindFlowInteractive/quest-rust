@@ -253,17 +253,27 @@ mod tests {
         assert!(AppError::InputInvalid("x".into()).source().is_none());
         assert!(AppError::InputEmpty.source().is_none());
         assert!(AppError::PlayerNotFound("x".into()).source().is_none());
-        assert!(AppError::InventoryItemNotFound("x".into()).source().is_none());
+        assert!(
+            AppError::InventoryItemNotFound("x".into())
+                .source()
+                .is_none()
+        );
         assert!(AppError::Puzzle("x".into()).source().is_none());
         assert!(AppError::Leaderboard("x".into()).source().is_none());
         assert!(AppError::PluginNotFound("x".into()).source().is_none());
-        assert!(AppError::PluginAlreadyRegistered("x".into()).source().is_none());
-        assert!(AppError::NftAlreadyMinted {
-            player_id: "p".into(),
-            milestone_type: "m".into(),
-        }
-        .source()
-        .is_none());
+        assert!(
+            AppError::PluginAlreadyRegistered("x".into())
+                .source()
+                .is_none()
+        );
+        assert!(
+            AppError::NftAlreadyMinted {
+                player_id: "p".into(),
+                milestone_type: "m".into(),
+            }
+            .source()
+            .is_none()
+        );
     }
 
     // ── From impl tests ──────────────────────────────────────────────────────

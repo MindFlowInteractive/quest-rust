@@ -13,7 +13,8 @@ impl Ord for Entry {
     fn cmp(&self, other: &Self) -> Ordering {
         // For leaderboard: higher scores should be "greater than" lower scores
         // This makes higher scores sort to the front when using sort()
-        self.score.cmp(&other.score)
+        self.score
+            .cmp(&other.score)
             .then_with(|| other.timestamp.cmp(&self.timestamp)) // Earlier timestamp wins on tie
     }
 }
@@ -44,12 +45,12 @@ impl Leaderboard {
             self.entries.sort_by(|a, b| b.cmp(a));
             return;
         }
-        if let Some(worst) = self.entries.last() {
-            if entry.cmp(worst) == Ordering::Greater {
-                self.entries.pop();
-                self.entries.push(entry);
-                self.entries.sort_by(|a, b| b.cmp(a));
-            }
+        if let Some(worst) = self.entries.last()
+            && entry.cmp(worst) == Ordering::Greater
+        {
+            self.entries.pop();
+            self.entries.push(entry);
+            self.entries.sort_by(|a, b| b.cmp(a));
         }
     }
 
@@ -70,7 +71,7 @@ impl Leaderboard {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn insertion_and_ordering() {
         let mut lb = Leaderboard::new(3);
