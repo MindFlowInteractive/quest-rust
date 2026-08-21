@@ -29,5 +29,5 @@ where
 }
 
 fn is_retryable(err: &ApiClientError) -> bool {
-    matches!(err, ApiClientError::Network(e) if e.is_timeout() || e.is_connect())
+    matches!(err, ApiClientError::Network(e) if e.is_timeout() || e.is_connect() || e.status().is_some_and(|s| s.is_server_error()))
 }

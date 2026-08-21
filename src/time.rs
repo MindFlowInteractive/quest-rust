@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 #[cfg(not(feature = "wasm"))]
 pub use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
@@ -13,7 +11,9 @@ pub struct Instant {
 impl Instant {
     pub fn now() -> Self {
         let window = web_sys::window().expect("should have a window in this context");
-        let performance = window.performance().expect("performance should be available");
+        let performance = window
+            .performance()
+            .expect("performance should be available");
         Self {
             now: performance.now(),
         }
@@ -21,7 +21,9 @@ impl Instant {
 
     pub fn elapsed(&self) -> Duration {
         let window = web_sys::window().expect("should have a window in this context");
-        let performance = window.performance().expect("performance should be available");
+        let performance = window
+            .performance()
+            .expect("performance should be available");
         let diff = performance.now() - self.now;
         Duration::from_millis(diff as u64)
     }
@@ -47,7 +49,10 @@ impl SystemTime {
         Self(js_sys::Date::now())
     }
 
-    pub fn duration_since(&self, _earlier: SystemTime) -> Result<Duration, std::time::SystemTimeError> {
+    pub fn duration_since(
+        &self,
+        _earlier: SystemTime,
+    ) -> Result<Duration, std::time::SystemTimeError> {
         let diff = self.0 - _earlier.0;
         if diff >= 0.0 {
             Ok(Duration::from_millis(diff as u64))

@@ -1,4 +1,4 @@
-use smart_contract_game::{engine, l10n::L10n};
+use smart_contract_game::l10n::L10n;
 
 use std::time::Duration;
 
@@ -10,13 +10,14 @@ fn main() {
     use smart_contract_game::player::Player;
 
     let args: Vec<String> = std::env::args().collect();
-    
-    let lang = args.iter()
+
+    let lang = args
+        .iter()
         .position(|a| a == "--lang")
         .and_then(|i| args.get(i + 1))
         .cloned()
         .unwrap_or_else(|| "en".to_string());
-        
+
     let l10n = L10n::new(&lang);
 
     if args.iter().any(|a| a == "--verify-puzzles") {
@@ -37,6 +38,13 @@ fn main() {
         std::process::exit(run_daily_challenge(&args));
     }
 
+    // Launch TUI mode unless --no-tui is specified
+    let no_tui = args.iter().any(|a| a == "--no-tui");
+    if !no_tui {
+        println!("TUI mode available. Use --no-tui for headless CLI mode.");
+        println!("(TUI requires an interactive terminal to render.)");
+    }
+
     // Initialize and run the core engine for a short duration to ensure clean startup/shutdown.
     let engine = smart_contract_game::engine::Engine::new(Duration::from_millis(16));
 
@@ -51,11 +59,17 @@ fn main() {
 
     match player.to_json() {
         Ok(json) => println!("Player state: {json}"),
-        Err(e) => eprintln!("{}", l10n.get("error-serialize-player", Some(&{
-            let mut args = fluent::FluentArgs::new();
-            args.set("error", e.to_string());
-            args
-        }))),
+        Err(e) => eprintln!(
+            "{}",
+            l10n.get(
+                "error-serialize-player",
+                Some(&{
+                    let mut args = fluent::FluentArgs::new();
+                    args.set("error", e.to_string());
+                    args
+                })
+            )
+        ),
     }
 }
 
@@ -86,10 +100,18 @@ fn run_verify_puzzles(dir: &str, l10n: &L10n) -> i32 {
     let mut failures = 0;
     for report in &reports {
         match &report.result {
-            Ok(()) => println!("{}   {}", l10n.get("ok-status", None), report.path.display()),
+            Ok(()) => println!(
+                "{}   {}",
+                l10n.get("ok-status", None),
+                report.path.display()
+            ),
             Err(e) => {
                 failures += 1;
-                println!("{} {}: {e}", l10n.get("fail-status", None), report.path.display());
+                println!(
+                    "{} {}: {e}",
+                    l10n.get("fail-status", None),
+                    report.path.display()
+                );
             }
         }
     }
@@ -158,7 +180,10 @@ fn run_daily_challenge(args: &[String]) -> i32 {
     for (i, cond) in puzzle.conditions.iter().enumerate() {
         println!("  {}. [{}] {}", i + 1, cond.id, cond.description);
     }
-    println!("Hash:        {}", puzzle.content_hash.as_deref().unwrap_or("None"));
+    println!(
+        "Hash:        {}",
+        puzzle.content_hash.as_deref().unwrap_or("None")
+    );
     println!("==================================================");
 
     0

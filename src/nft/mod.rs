@@ -1,6 +1,6 @@
 use crate::errors::AppError;
-use std::collections::HashMap;
 use crate::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Achievement {
@@ -11,6 +11,12 @@ pub struct Achievement {
 
 pub struct NftModule {
     minted_achievements: HashMap<(String, String), Achievement>,
+}
+
+impl Default for NftModule {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NftModule {
@@ -26,12 +32,7 @@ impl NftModule {
         milestone_type: String,
     ) -> Result<Achievement, AppError> {
         let key = (player_id.clone(), milestone_type.clone());
-        if self.minted_achievements.contains_key(&key) {
-            Err(AppError::NftAlreadyMinted {
-                player_id,
-                milestone_type,
-            })
-        } else {
+        if let std::collections::hash_map::Entry::Vacant(e) = self.minted_achievements.entry(key) {
             let timestamp = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .expect("Time went backwards")
@@ -42,8 +43,13 @@ impl NftModule {
                 milestone_type,
                 timestamp,
             };
-            self.minted_achievements.insert(key, achievement.clone());
+            e.insert(achievement.clone());
             Ok(achievement)
+        } else {
+            Err(AppError::NftAlreadyMinted {
+                player_id,
+                milestone_type,
+            })
         }
     }
 }

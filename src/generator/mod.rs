@@ -158,7 +158,10 @@ fn step_pool_for_category(category: Category) -> Vec<(&'static str, &'static str
             ("toggle_switch_alpha", "Toggle the alpha input switch"),
             ("flip_relay_beta", "Flip the magnetic relay beta switch"),
             ("calibrate_gate_gamma", "Calibrate the gamma logic gate"),
-            ("bridge_bus_connection", "Bridge the central data bus connection"),
+            (
+                "bridge_bus_connection",
+                "Bridge the central data bus connection",
+            ),
             ("ground_wire_delta", "Ground the delta voltage wire"),
             ("bypass_safety_fuse", "Bypass the secondary safety fuse"),
             ("verify_truth_table", "Verify the output truth table state"),
@@ -166,25 +169,55 @@ fn step_pool_for_category(category: Category) -> Vec<(&'static str, &'static str
             ("sync_clock_pulse", "Synchronize the master clock pulse"),
         ],
         Category::Cryptography => vec![
-            ("intercept_cipher_text", "Intercept the encrypted cipher payload"),
-            ("decode_substitution", "Decode the monoalphabetic substitution key"),
-            ("shift_caesar_offset", "Shift the Caesar cipher rotary wheel"),
-            ("calculate_crc_checksum", "Calculate the 32-bit CRC checksum"),
+            (
+                "intercept_cipher_text",
+                "Intercept the encrypted cipher payload",
+            ),
+            (
+                "decode_substitution",
+                "Decode the monoalphabetic substitution key",
+            ),
+            (
+                "shift_caesar_offset",
+                "Shift the Caesar cipher rotary wheel",
+            ),
+            (
+                "calculate_crc_checksum",
+                "Calculate the 32-bit CRC checksum",
+            ),
             ("apply_xor_mask", "Apply the stream cipher XOR mask"),
             ("decrypt_header_bytes", "Decrypt the payload header block"),
-            ("verify_hash_signature", "Verify the cryptographic SHA signature"),
+            (
+                "verify_hash_signature",
+                "Verify the cryptographic SHA signature",
+            ),
             ("crack_rsa_modulus", "Decompose the public RSA modulus"),
-            ("extract_secret_nonce", "Extract the one-time secret initialization vector"),
-            ("authorize_key_pair", "Authorize the decrypted master key pair"),
+            (
+                "extract_secret_nonce",
+                "Extract the one-time secret initialization vector",
+            ),
+            (
+                "authorize_key_pair",
+                "Authorize the decrypted master key pair",
+            ),
         ],
         Category::Dungeon => vec![
-            ("find_iron_key", "Locate the heavy iron key in the wall alcove"),
+            (
+                "find_iron_key",
+                "Locate the heavy iron key in the wall alcove",
+            ),
             ("unlock_dungeon_grate", "Unlock the reinforced iron grate"),
-            ("disarm_pressure_plate", "Disarm the concealed floor pressure plate"),
+            (
+                "disarm_pressure_plate",
+                "Disarm the concealed floor pressure plate",
+            ),
             ("ignite_stone_brazier", "Ignite the ritual stone brazier"),
             ("pull_shadow_lever", "Pull the concealed wall lever"),
             ("align_gargoyle_statue", "Align the twin gargoyle statues"),
-            ("retrieve_ancient_relic", "Retrieve the relic from the stone pedestal"),
+            (
+                "retrieve_ancient_relic",
+                "Retrieve the relic from the stone pedestal",
+            ),
             ("quench_flame_trap", "Quench the fire-breathing wall trap"),
             ("rotate_sun_disk", "Rotate the celestial sun disk dial"),
             ("unseal_vault_door", "Unseal the heavy vault door mechanism"),
@@ -192,26 +225,62 @@ fn step_pool_for_category(category: Category) -> Vec<(&'static str, &'static str
         Category::Alchemy => vec![
             ("gather_fire_herb", "Gather dried dragonfire herb leaves"),
             ("crush_moonstone_dust", "Crush moonstone into fine powder"),
-            ("heat_brass_crucible", "Heat the brass crucible to boiling point"),
-            ("distill_silver_essence", "Distill the pure silver liquid essence"),
+            (
+                "heat_brass_crucible",
+                "Heat the brass crucible to boiling point",
+            ),
+            (
+                "distill_silver_essence",
+                "Distill the pure silver liquid essence",
+            ),
             ("mix_catalyst_agent", "Mix the stabilizing catalyst agent"),
-            ("quench_reaction_vial", "Quench the chemical reaction vial in water"),
-            ("filter_sediment_precipitate", "Filter out the solid crystalline sediment"),
+            (
+                "quench_reaction_vial",
+                "Quench the chemical reaction vial in water",
+            ),
+            (
+                "filter_sediment_precipitate",
+                "Filter out the solid crystalline sediment",
+            ),
             ("seal_alchemical_flask", "Seal the glowing alchemical flask"),
-            ("purify_elixir_compound", "Purify the master potion compound"),
-            ("transmute_base_metal", "Transmute the base alloy into transmuted gold"),
+            (
+                "purify_elixir_compound",
+                "Purify the master potion compound",
+            ),
+            (
+                "transmute_base_metal",
+                "Transmute the base alloy into transmuted gold",
+            ),
         ],
         Category::Pattern => vec![
-            ("observe_light_sequence", "Observe the repeating light sequence"),
+            (
+                "observe_light_sequence",
+                "Observe the repeating light sequence",
+            ),
             ("align_rhythmic_dial", "Align the rhythmic resonance dial"),
             ("match_color_nodes", "Match the glowing color node pairs"),
-            ("rotate_concentric_rings", "Rotate the inner concentric rings"),
-            ("balance_crystal_harmonics", "Balance the crystal acoustic harmonics"),
-            ("calibrate_frequency_wave", "Calibrate the sine frequency wave"),
+            (
+                "rotate_concentric_rings",
+                "Rotate the inner concentric rings",
+            ),
+            (
+                "balance_crystal_harmonics",
+                "Balance the crystal acoustic harmonics",
+            ),
+            (
+                "calibrate_frequency_wave",
+                "Calibrate the sine frequency wave",
+            ),
             ("solve_matrix_grid", "Solve the 3x3 symbol matrix grid"),
-            ("synchronize_pulses", "Synchronize the harmonic energy pulses"),
+            (
+                "synchronize_pulses",
+                "Synchronize the harmonic energy pulses",
+            ),
             ("lock_pattern_phase", "Lock the phase lock loop in position"),
-            ("stabilize_resonance_core", "Stabilize the main resonance core"),
+            (
+                "stabilize_resonance_core",
+                "Stabilize the main resonance core",
+            ),
         ],
     }
 }
@@ -220,38 +289,104 @@ fn red_herring_pool_for_category(category: Category) -> Vec<(&'static str, &'sta
     match category {
         Category::Logic => vec![
             ("cut_red_wire", "Cut the decoy red wire (herring)"),
-            ("overload_capacitor", "Overload the secondary capacitor (herring)"),
-            ("press_emergency_dump", "Press the emergency memory dump button (herring)"),
-            ("short_circuit_bus", "Short circuit the auxiliary bus bar (herring)"),
-            ("disable_cooling_fan", "Disable the chassis cooling fan (herring)"),
+            (
+                "overload_capacitor",
+                "Overload the secondary capacitor (herring)",
+            ),
+            (
+                "press_emergency_dump",
+                "Press the emergency memory dump button (herring)",
+            ),
+            (
+                "short_circuit_bus",
+                "Short circuit the auxiliary bus bar (herring)",
+            ),
+            (
+                "disable_cooling_fan",
+                "Disable the chassis cooling fan (herring)",
+            ),
         ],
         Category::Cryptography => vec![
             ("parse_decoy_flag", "Parse the decoy secret flag (herring)"),
-            ("inject_null_payload", "Inject null padding bytes into stream (herring)"),
-            ("corrupt_index_table", "Corrupt the dictionary lookup table (herring)"),
-            ("reverse_endianness", "Reverse payload byte endianness (herring)"),
-            ("spoof_mac_address", "Spoof the network hardware address (herring)"),
+            (
+                "inject_null_payload",
+                "Inject null padding bytes into stream (herring)",
+            ),
+            (
+                "corrupt_index_table",
+                "Corrupt the dictionary lookup table (herring)",
+            ),
+            (
+                "reverse_endianness",
+                "Reverse payload byte endianness (herring)",
+            ),
+            (
+                "spoof_mac_address",
+                "Spoof the network hardware address (herring)",
+            ),
         ],
         Category::Dungeon => vec![
-            ("open_mimic_chest", "Open the suspicious wooden chest (herring)"),
-            ("drink_murky_potion", "Drink the unlabelled green potion (herring)"),
-            ("step_on_loose_tile", "Step on the loose crumbling floor tile (herring)"),
+            (
+                "open_mimic_chest",
+                "Open the suspicious wooden chest (herring)",
+            ),
+            (
+                "drink_murky_potion",
+                "Drink the unlabelled green potion (herring)",
+            ),
+            (
+                "step_on_loose_tile",
+                "Step on the loose crumbling floor tile (herring)",
+            ),
             ("touch_cursed_idol", "Touch the glowing jade idol (herring)"),
-            ("ring_warning_bell", "Ring the rusted warning bell (herring)"),
+            (
+                "ring_warning_bell",
+                "Ring the rusted warning bell (herring)",
+            ),
         ],
         Category::Alchemy => vec![
-            ("add_excess_sulfur", "Add excess sulfur powder to crucible (herring)"),
-            ("boil_potion_dry", "Boil the mixture until completely dry (herring)"),
-            ("spill_acid_solvent", "Spill acidic solvent onto laboratory bench (herring)"),
-            ("inhale_noxious_vapor", "Inhale the strange purple vapor (herring)"),
-            ("freeze_mixture_solid", "Freeze the liquid mixture prematurely (herring)"),
+            (
+                "add_excess_sulfur",
+                "Add excess sulfur powder to crucible (herring)",
+            ),
+            (
+                "boil_potion_dry",
+                "Boil the mixture until completely dry (herring)",
+            ),
+            (
+                "spill_acid_solvent",
+                "Spill acidic solvent onto laboratory bench (herring)",
+            ),
+            (
+                "inhale_noxious_vapor",
+                "Inhale the strange purple vapor (herring)",
+            ),
+            (
+                "freeze_mixture_solid",
+                "Freeze the liquid mixture prematurely (herring)",
+            ),
         ],
         Category::Pattern => vec![
-            ("disrupt_wave_amplitude", "Disrupt the sound wave amplitude (herring)"),
-            ("invert_color_spectrum", "Invert the visual color spectrum (herring)"),
-            ("randomize_dial_positions", "Randomly spin all dials (herring)"),
-            ("shatter_tuning_fork", "Shatter the acoustic tuning fork (herring)"),
-            ("scramble_matrix_symbols", "Scramble the matrix tile order (herring)"),
+            (
+                "disrupt_wave_amplitude",
+                "Disrupt the sound wave amplitude (herring)",
+            ),
+            (
+                "invert_color_spectrum",
+                "Invert the visual color spectrum (herring)",
+            ),
+            (
+                "randomize_dial_positions",
+                "Randomly spin all dials (herring)",
+            ),
+            (
+                "shatter_tuning_fork",
+                "Shatter the acoustic tuning fork (herring)",
+            ),
+            (
+                "scramble_matrix_symbols",
+                "Scramble the matrix tile order (herring)",
+            ),
         ],
     }
 }
@@ -463,7 +598,10 @@ mod tests {
     fn category_parsing_and_display() {
         assert_eq!("logic".parse::<Category>().unwrap(), Category::Logic);
         assert_eq!("dungeon".parse::<Category>().unwrap(), Category::Dungeon);
-        assert_eq!("crypto".parse::<Category>().unwrap(), Category::Cryptography);
+        assert_eq!(
+            "crypto".parse::<Category>().unwrap(),
+            Category::Cryptography
+        );
         assert_eq!(Category::Alchemy.to_string(), "Alchemy");
     }
 

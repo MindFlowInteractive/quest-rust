@@ -1,7 +1,6 @@
-
-use fluent::{FluentBundle, FluentResource, FluentArgs};
-use unic_langid::langid;
+use fluent::{FluentArgs, FluentBundle, FluentResource};
 use std::fs;
+use unic_langid::langid;
 
 pub struct L10n {
     bundle: FluentBundle<FluentResource>,
@@ -14,12 +13,17 @@ impl L10n {
 
         let ftl_path = format!("locales/{}.ftl", lang);
         let content = fs::read_to_string(&ftl_path).unwrap_or_else(|_| {
-            eprintln!("Warning: Could not load locale '{}', falling back to English.", lang);
+            eprintln!(
+                "Warning: Could not load locale '{}', falling back to English.",
+                lang
+            );
             fs::read_to_string("locales/en.ftl").expect("Failed to load en.ftl")
         });
 
         let resource = FluentResource::try_new(content).expect("Failed to parse FTL file");
-        bundle.add_resource(resource).expect("Failed to add resource to bundle");
+        bundle
+            .add_resource(resource)
+            .expect("Failed to add resource to bundle");
 
         Self { bundle }
     }
@@ -27,14 +31,14 @@ impl L10n {
     pub fn get(&self, key: &str, args: Option<&FluentArgs>) -> String {
         let msg = self.bundle.get_message(key).expect("Message not found");
         let pattern = msg.value().expect("Message has no value");
-        
+
         let mut errors = vec![];
         let value = self.bundle.format_pattern(pattern, args, &mut errors);
-        
+
         if !errors.is_empty() {
             eprintln!("Warning: Errors formatting message '{}': {:?}", key, errors);
         }
-        
+
         value.to_string()
     }
 }
