@@ -9,6 +9,9 @@ pub mod time;
 #[cfg(not(feature = "wasm"))]
 pub mod api_client;
 
+#[cfg(not(feature = "wasm"))]
+pub mod tui;
+
 pub mod config;
 pub mod difficulty;
 pub mod errors;
