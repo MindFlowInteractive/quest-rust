@@ -1,5 +1,5 @@
-use std::time::Duration;
 use crate::time::Instant;
+use std::time::Duration;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum TimerState {
@@ -262,7 +262,10 @@ mod tests {
         let elapsed = timer.stop().unwrap();
         // should be ~40ms (20+20), not 90ms
         assert!(elapsed >= 40, "Expected at least 40ms, got {elapsed}ms");
-        assert!(elapsed < 90, "Paused time should not count; got {elapsed}ms");
+        assert!(
+            elapsed < 90,
+            "Paused time should not count; got {elapsed}ms"
+        );
     }
 
     #[test]

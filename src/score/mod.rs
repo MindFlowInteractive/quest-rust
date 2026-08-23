@@ -1,10 +1,15 @@
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Score {
     current_score: u32,
     high_score: u32,
+}
+
+impl Default for Score {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Score {

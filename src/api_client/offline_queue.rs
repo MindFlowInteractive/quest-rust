@@ -30,6 +30,10 @@ impl OfflineQueue {
     pub async fn len(&self) -> usize {
         self.inner.lock().await.len()
     }
+
+    pub async fn is_empty(&self) -> bool {
+        self.inner.lock().await.is_empty()
+    }
 }
 
 /// Detects whether a reqwest error indicates the client is offline

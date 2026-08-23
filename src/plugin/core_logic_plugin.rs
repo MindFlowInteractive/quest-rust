@@ -106,10 +106,14 @@ mod tests {
         registry.register(Box::new(CoreLogicPlugin)).unwrap();
 
         let context = ctx(&[("door_open", true)]);
-        let result = registry.evaluate("core_logic", "door_open", &context).unwrap();
+        let result = registry
+            .evaluate("core_logic", "door_open", &context)
+            .unwrap();
         assert_eq!(result, EvalResult::Satisfied);
 
-        let result = registry.evaluate("core_logic", "door_open", &ctx(&[])).unwrap();
+        let result = registry
+            .evaluate("core_logic", "door_open", &ctx(&[]))
+            .unwrap();
         assert!(matches!(result, EvalResult::Unsatisfied { .. }));
     }
 }

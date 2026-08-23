@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 
-
 /// Core game engine that manages the main loop and lifecycle.
 pub struct Engine {
     tick_rate: Duration,

@@ -12,7 +12,7 @@ use auth::{LoginRequest, LoginResponse};
 use config::ApiClientConfig;
 use error::ApiClientError;
 use leaderboard::LeaderboardEntry;
-use offline_queue::{is_offline_error, OfflineQueue, QueuedAction};
+use offline_queue::{OfflineQueue, QueuedAction, is_offline_error};
 use retry::with_retry;
 use session::Session;
 use std::sync::Arc;
@@ -83,12 +83,12 @@ impl ApiClient {
         })
         .await;
 
-        if let Err(ApiClientError::Network(ref e)) = result {
-            if is_offline_error(e) {
-                let payload = serde_json::to_string(session)?;
-                self.queue.push(QueuedAction::SubmitSession(payload)).await;
-                return Err(ApiClientError::Offline);
-            }
+        if let Err(ApiClientError::Network(ref e)) = result
+            && is_offline_error(e)
+        {
+            let payload = serde_json::to_string(session)?;
+            self.queue.push(QueuedAction::SubmitSession(payload)).await;
+            return Err(ApiClientError::Offline);
         }
         result
     }
@@ -110,7 +110,10 @@ impl ApiClient {
         .await
     }
 
-    pub async fn mint_achievement(&self, achievement_id: &str) -> Result<MintResponse, ApiClientError> {
+    pub async fn mint_achievement(
+        &self,
+        achievement_id: &str,
+    ) -> Result<MintResponse, ApiClientError> {
         let url = format!("{}/nft/mint", self.config.base_url);
         let token = self.token().await.ok_or(ApiClientError::Unauthorized)?;
 
@@ -129,13 +132,13 @@ impl ApiClient {
         })
         .await;
 
-        if let Err(ApiClientError::Network(ref e)) = result {
-            if is_offline_error(e) {
-                self.queue
-                    .push(QueuedAction::MintAchievement(achievement_id.to_string()))
-                    .await;
-                return Err(ApiClientError::Offline);
-            }
+        if let Err(ApiClientError::Network(ref e)) = result
+            && is_offline_error(e)
+        {
+            self.queue
+                .push(QueuedAction::MintAchievement(achievement_id.to_string()))
+                .await;
+            return Err(ApiClientError::Offline);
         }
         result
     }
@@ -151,15 +154,11 @@ impl ApiClient {
 
         for action in actions {
             let result = match action {
-                QueuedAction::SubmitSession(json) => {
-                    match serde_json::from_str::<Session>(&json) {
-                        Ok(session) => self.submit_session(&session).await,
-                        Err(e) => Err(ApiClientError::from(e)),
-                    }
-                }
-                QueuedAction::MintAchievement(id) => {
-                    self.mint_achievement(&id).await.map(|_| ())
-                }
+                QueuedAction::SubmitSession(json) => match serde_json::from_str::<Session>(&json) {
+                    Ok(session) => self.submit_session(&session).await,
+                    Err(e) => Err(ApiClientError::from(e)),
+                },
+                QueuedAction::MintAchievement(id) => self.mint_achievement(&id).await.map(|_| ()),
             };
             results.push(result);
         }

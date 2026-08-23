@@ -1,4 +1,4 @@
-use smart_contract_game::{engine, l10n::L10n};
+use smart_contract_game::l10n::L10n;
 
 use std::time::Duration;
 
@@ -10,13 +10,14 @@ fn main() {
     use smart_contract_game::player::Player;
 
     let args: Vec<String> = std::env::args().collect();
-    
-    let lang = args.iter()
+
+    let lang = args
+        .iter()
         .position(|a| a == "--lang")
         .and_then(|i| args.get(i + 1))
         .cloned()
         .unwrap_or_else(|| "en".to_string());
-        
+
     let l10n = L10n::new(&lang);
 
     if args.iter().any(|a| a == "--verify-puzzles") {
@@ -37,6 +38,10 @@ fn main() {
         std::process::exit(run_daily_challenge(&args));
     }
 
+    if args.iter().any(|a| a == "--playback") {
+        std::process::exit(run_playback(&args));
+    }
+
     // Initialize and run the core engine for a short duration to ensure clean startup/shutdown.
     let engine = smart_contract_game::engine::Engine::new(Duration::from_millis(16));
 
@@ -51,11 +56,17 @@ fn main() {
 
     match player.to_json() {
         Ok(json) => println!("Player state: {json}"),
-        Err(e) => eprintln!("{}", l10n.get("error-serialize-player", Some(&{
-            let mut args = fluent::FluentArgs::new();
-            args.set("error", e.to_string());
-            args
-        }))),
+        Err(e) => eprintln!(
+            "{}",
+            l10n.get(
+                "error-serialize-player",
+                Some(&{
+                    let mut args = fluent::FluentArgs::new();
+                    args.set("error", e.to_string());
+                    args
+                })
+            )
+        ),
     }
 }
 
@@ -86,10 +97,18 @@ fn run_verify_puzzles(dir: &str, l10n: &L10n) -> i32 {
     let mut failures = 0;
     for report in &reports {
         match &report.result {
-            Ok(()) => println!("{}   {}", l10n.get("ok-status", None), report.path.display()),
+            Ok(()) => println!(
+                "{}   {}",
+                l10n.get("ok-status", None),
+                report.path.display()
+            ),
             Err(e) => {
                 failures += 1;
-                println!("{} {}: {e}", l10n.get("fail-status", None), report.path.display());
+                println!(
+                    "{} {}: {e}",
+                    l10n.get("fail-status", None),
+                    report.path.display()
+                );
             }
         }
     }
@@ -158,8 +177,75 @@ fn run_daily_challenge(args: &[String]) -> i32 {
     for (i, cond) in puzzle.conditions.iter().enumerate() {
         println!("  {}. [{}] {}", i + 1, cond.id, cond.description);
     }
-    println!("Hash:        {}", puzzle.content_hash.as_deref().unwrap_or("None"));
+    println!(
+        "Hash:        {}",
+        puzzle.content_hash.as_deref().unwrap_or("None")
+    );
     println!("==================================================");
 
     0
+}
+
+/// Runs the `--playback <file>` command: loads a `.qreplay` file and replays
+/// all recorded events, printing a summary at the end.
+fn run_playback(args: &[String]) -> i32 {
+    use smart_contract_game::replay::ReplayPlayer;
+
+    let file_path = match args
+        .iter()
+        .position(|a| a == "--playback")
+        .and_then(|i| args.get(i + 1))
+    {
+        Some(p) => p.clone(),
+        None => {
+            eprintln!("Usage: --playback <file> [--speed <1|2|4>]");
+            return 1;
+        }
+    };
+
+    let speed: u32 = args
+        .iter()
+        .position(|a| a == "--speed")
+        .and_then(|i| args.get(i + 1))
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1);
+
+    if !matches!(speed, 1 | 2 | 4) {
+        eprintln!("Invalid speed: {speed}. Allowed values: 1, 2, 4");
+        return 1;
+    }
+
+    let player = match ReplayPlayer::load(&file_path) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("Failed to load replay file '{file_path}': {e}");
+            return 1;
+        }
+    };
+
+    println!("=== Replay Playback ({speed}x speed) ===");
+    if let Some(hash) = player.puzzle_content_hash() {
+        println!("Puzzle hash: {hash}");
+    }
+
+    let events = player.playback(speed);
+    for (timestamp_us, event) in &events {
+        let ms = timestamp_us / 1000;
+        println!("[{ms:>8}ms] {event}");
+    }
+
+    let summary = player.summary();
+    print_replay_summary(&summary);
+
+    0
+}
+
+fn print_replay_summary(summary: &smart_contract_game::replay::ReplaySummary) {
+    println!();
+    println!("=== Replay Summary ===");
+    println!("Total time:    {}ms", summary.total_time_ms);
+    println!("Hints used:    {}", summary.hints_used);
+    println!("Attempts:      {}", summary.attempt_count);
+    println!("Final score:   {}", summary.final_score);
+    println!("======================");
 }
