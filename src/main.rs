@@ -38,11 +38,8 @@ fn main() {
         std::process::exit(run_daily_challenge(&args));
     }
 
-    // Launch TUI mode unless --no-tui is specified
-    let no_tui = args.iter().any(|a| a == "--no-tui");
-    if !no_tui {
-        println!("TUI mode available. Use --no-tui for headless CLI mode.");
-        println!("(TUI requires an interactive terminal to render.)");
+    if args.iter().any(|a| a == "--playback") {
+        std::process::exit(run_playback(&args));
     }
 
     // Initialize and run the core engine for a short duration to ensure clean startup/shutdown.
@@ -187,4 +184,68 @@ fn run_daily_challenge(args: &[String]) -> i32 {
     println!("==================================================");
 
     0
+}
+
+/// Runs the `--playback <file>` command: loads a `.qreplay` file and replays
+/// all recorded events, printing a summary at the end.
+fn run_playback(args: &[String]) -> i32 {
+    use smart_contract_game::replay::ReplayPlayer;
+
+    let file_path = match args
+        .iter()
+        .position(|a| a == "--playback")
+        .and_then(|i| args.get(i + 1))
+    {
+        Some(p) => p.clone(),
+        None => {
+            eprintln!("Usage: --playback <file> [--speed <1|2|4>]");
+            return 1;
+        }
+    };
+
+    let speed: u32 = args
+        .iter()
+        .position(|a| a == "--speed")
+        .and_then(|i| args.get(i + 1))
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(1);
+
+    if !matches!(speed, 1 | 2 | 4) {
+        eprintln!("Invalid speed: {speed}. Allowed values: 1, 2, 4");
+        return 1;
+    }
+
+    let player = match ReplayPlayer::load(&file_path) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("Failed to load replay file '{file_path}': {e}");
+            return 1;
+        }
+    };
+
+    println!("=== Replay Playback ({speed}x speed) ===");
+    if let Some(hash) = player.puzzle_content_hash() {
+        println!("Puzzle hash: {hash}");
+    }
+
+    let events = player.playback(speed);
+    for (timestamp_us, event) in &events {
+        let ms = timestamp_us / 1000;
+        println!("[{ms:>8}ms] {event}");
+    }
+
+    let summary = player.summary();
+    print_replay_summary(&summary);
+
+    0
+}
+
+fn print_replay_summary(summary: &smart_contract_game::replay::ReplaySummary) {
+    println!();
+    println!("=== Replay Summary ===");
+    println!("Total time:    {}ms", summary.total_time_ms);
+    println!("Hints used:    {}", summary.hints_used);
+    println!("Attempts:      {}", summary.attempt_count);
+    println!("Final score:   {}", summary.final_score);
+    println!("======================");
 }

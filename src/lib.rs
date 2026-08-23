@@ -2,6 +2,7 @@ pub mod cli;
 pub mod engine;
 pub mod l10n;
 pub mod logic;
+pub mod replay;
 pub mod session;
 pub mod time;
 
